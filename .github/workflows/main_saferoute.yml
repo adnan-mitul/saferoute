@@ -15,17 +15,16 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.x' 
+          dotnet-version: '8.x' # অথবা আপনার ভার্সন অনুযায়ী ১০.x দিন
 
       - name: dotnet publish
-    
-        run: dotnet publish -c Release -o ./publish
+        run: dotnet publish -c Release -o ./output
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: net-app-artifact
-          path: ./publishে
+          name: saferoute-app
+          path: ./output
 
   deploy:
     runs-on: ubuntu-latest
@@ -35,11 +34,11 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: net-app-artifact
-          path: ./ready-to-deploy ে
+          name: saferoute-app
+          path: ./publish-files
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -53,5 +52,4 @@ jobs:
         with:
           app-name: 'SafeRoute'
           slot-name: 'Production'
-          # এখানে নির্দিষ্ট পাথটি বলে দিচ্ছি
-          package: ./ready-to-deploy
+          package: ./publish-files
