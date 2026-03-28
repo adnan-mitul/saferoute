@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SafeRoute.Data;
 using SafeRoute.Models;
@@ -62,6 +62,17 @@ using (var scope = app.Services.CreateScope())
     var _context = scope.ServiceProvider.GetRequiredService<SafeRoute.Data.AppDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    // Apply any pending database migrations automatically (Crucial for Azure deployment)
+    try
+    {
+        _context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
 
     // Seed Roles
     string[] roles = { "Admin", "User" };
