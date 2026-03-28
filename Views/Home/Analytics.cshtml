@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Safety Analytics";
+}
+
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="section-title"><i class="fa-solid fa-chart-line text-accent me-2"></i> Safety Analytics</h2>
+            <p class="section-subtitle mb-0">Real-time insights into community safety data and trends.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-2">
+            <div class="card glass-card text-center p-4 hover-lift">
+                <div class="stat-number text-danger">@ViewBag.TotalReports</div>
+                <div class="stat-label">Total Reports</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card glass-card text-center p-4 hover-lift">
+                <div class="stat-number" style="color:var(--warning)">@ViewBag.PendingReports</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card glass-card text-center p-4 hover-lift">
+                <div class="stat-number text-success">@ViewBag.VerifiedReports</div>
+                <div class="stat-label">Verified</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card glass-card text-center p-4 hover-lift">
+                <div class="stat-number text-accent">@ViewBag.TotalUsers</div>
+                <div class="stat-label">Users</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card glass-card text-center p-4 hover-lift">
+                <div class="stat-number text-danger">@ViewBag.TotalSOS</div>
+                <div class="stat-label">SOS Alerts</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card glass-card text-center p-4 hover-lift">
+                <div class="stat-number" style="color:#feca57">@ViewBag.TotalRatings</div>
+                <div class="stat-label">Area Ratings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card glass-card p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-accent"></i>Incidents by Category</h5>
+                <canvas id="categoryChart" height="280"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card glass-card p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-bar me-2 text-accent"></i>Monthly Trend</h5>
+                <canvas id="trendChart" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var catLabels = @Html.Raw(ViewBag.CategoryLabels ?? "[]");
+    var catCounts = @Html.Raw(ViewBag.CategoryCounts ?? "[]");
+    var monthLabels = @Html.Raw(ViewBag.MonthLabels ?? "[]");
+    var monthCounts = @Html.Raw(ViewBag.MonthCounts ?? "[]");
+
+    // Category Pie Chart
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: catLabels,
+            datasets: [{
+                data: catCounts,
+                backgroundColor: ['#ff6b6b', '#feca57', '#6c5ce7', '#00d2d3', '#fd79a8', '#e17055', '#55efc4'],
+                borderColor: 'transparent',
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#b2bec3', padding: 15, font: { size: 12 } } }
+            },
+            cutout: '60%'
+        }
+    });
+
+    // Monthly Trend Line Chart
+    new Chart(document.getElementById('trendChart'), {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Incidents',
+                data: monthCounts,
+                backgroundColor: 'rgba(108,92,231,0.6)',
+                borderColor: '#6c5ce7',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#b2bec3' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#b2bec3' }, grid: { display: false } }
+            },
+            plugins: {
+                legend: { labels: { color: '#b2bec3' } }
+            }
+        }
+    });
+});
+</script>
+}

@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "Live Tracking";
+    Layout = "_Layout";
+}
+
+<div class="container py-5 text-center">
+    @if ((bool)ViewBag.Expired)
+    {
+        <div class="card glass-card p-5 mx-auto" style="max-width:500px">
+            <i class="fa-solid fa-clock fa-3x mb-3 text-warning"></i>
+            <h3 class="fw-bold">Tracking Link Expired</h3>
+            <p class="text-muted">This live tracking link has expired or is no longer active.</p>
+            <a href="/" class="btn btn-primary-glow mt-2">Go to SafeRoute</a>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <span class="badge bg-danger-glow px-3 py-2 fs-6">
+                <i class="fa-solid fa-satellite-dish me-1"></i> LIVE TRACKING
+            </span>
+        </div>
+        <h3 class="fw-bold mb-1">@ViewBag.UserName is sharing their location</h3>
+        <p class="text-muted">This link will auto-expire for privacy protection.</p>
+
+        <div id="trackMap" style="height:500px;border-radius:16px;overflow:hidden;border:2px solid var(--glass-border)" class="mb-3"></div>
+
+        <div class="card glass-card p-3 mx-auto d-flex flex-row justify-content-around" style="max-width:500px">
+            <div><small class="text-muted">Latitude</small><div class="fw-bold" id="trackLat">@ViewBag.Latitude</div></div>
+            <div><small class="text-muted">Longitude</small><div class="fw-bold" id="trackLng">@ViewBag.Longitude</div></div>
+            <div><small class="text-muted">Last Update</small><div class="fw-bold" id="trackTime">Just now</div></div>
+        </div>
+    }
+</div>
+
+@if (!(bool)ViewBag.Expired)
+{
+    @section Scripts {
+        <script>
+            var lat = @ViewBag.Latitude;
+            var lng = @ViewBag.Longitude;
+            var token = '@ViewBag.Token';
+
+            var map = L.map('trackMap').setView([lat, lng], 16);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+            var marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup('<b>@ViewBag.UserName</b><br>📍 Live Location').openPopup();
+
+            var circle = L.circle([lat, lng], { radius: 50, color: '#ff6b6b', fillOpacity: 0.2 }).addTo(map);
+
+            // Poll every 10 seconds
+            setInterval(function () {
+                fetch('/api/Sos/track/' + token)
+                    .then(r => r.json())
+                    .then(data => {
+                        marker.setLatLng([data.latitude, data.longitude]);
+                        circle.setLatLng([data.latitude, data.longitude]);
+                        map.panTo([data.latitude, data.longitude]);
+                        document.getElementById('trackLat').textContent = data.latitude.toFixed(4);
+                        document.getElementById('trackLng').textContent = data.longitude.toFixed(4);
+                        document.getElementById('trackTime').textContent = new Date(data.timestamp).toLocaleTimeString();
+                    })
+                    .catch(() => {});
+            }, 10000);
+        </script>
+    }
+}

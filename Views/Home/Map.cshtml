@@ -1,0 +1,718 @@
+@{
+    ViewData["Title"] = "Live Safety Map";
+}
+
+<div class="map-wrapper">
+    <!-- The Full Screen Map -->
+    <div id="fullMap" class="fullscreen-map"></div>
+
+    <!-- Top Left Floating Panel (Time & Route) -->
+    <div class="map-overlay-panel top-left-panel">
+        <!-- Live Status / Simulator Toggle -->
+        <div class="glass-card mb-2 p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div id="timeIcon" style="font-size: 1.5rem;"></div>
+                    <div>
+                        <div class="fw-bold" id="currentTime" style="font-size: 1rem;">Live</div>
+                        <div class="small fw-bold" id="riskBadge"></div>
+                    </div>
+                </div>
+                <!-- Time Simulator Dropdown directly accessible -->
+                <div class="input-group input-group-sm ms-2" style="width: 140px;">
+                    <select class="form-select form-select-sm" id="timeSearch">
+                        <option value="-1" selected>🕐 Live</option>
+                        <option value="6">☀️ 6AM</option>
+                        <option value="9">☀️ 9AM</option>
+                        <option value="12">☀️ 12PM</option>
+                        <option value="15">☀️ 3PM</option>
+                        <option value="18">🌆 6PM</option>
+                        <option value="20">🌆 8PM</option>
+                        <option value="21">🌙 9PM</option>
+                        <option value="23">🌙 11PM</option>
+                        <option value="2">🌙 2AM</option>
+                    </select>
+                    <button class="btn btn-primary-glow btn-sm" id="btnApplyTime"><i class="fa-solid fa-check"></i></button>
+                </div>
+            </div>
+            <div id="simulationStatus" class="mt-2 text-center" style="display:none;">
+                <span class="badge rounded-pill px-2 py-1 w-100" style="background: rgba(108,92,231,0.2); color: var(--accent-light); border: 1px solid rgba(108,92,231,0.4);">
+                    <i class="fa-solid fa-flask me-1"></i> Simulation Active
+                </span>
+            </div>
+            <div id="timelineBar" class="d-flex gap-1 mt-2"></div>
+        </div>
+
+        <!-- Route Panel (Initially Hidden but now a floating card) -->
+        <div class="glass-card p-3 mb-2" id="routePanel" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0 fw-bold"><i class="fa-solid fa-route text-accent me-2"></i> Safe Route</h6>
+                <button class="btn-close btn-close-white text-muted" aria-label="Close" onclick="document.getElementById('routePanel').style.display='none';"></button>
+            </div>
+            <div class="position-relative mb-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text" style="background:var(--bg-card);border-color:var(--glass-border);color:var(--accent)"><i class="fa-solid fa-location-dot"></i></span>
+                    <input type="text" class="form-control form-control-sm" id="routeFrom" placeholder="From..." autocomplete="off" />
+                    <button class="btn btn-glass btn-sm" id="btnUseMyLoc" title="Use my current location"><i class="fa-solid fa-crosshairs"></i></button>
+                </div>
+                <input type="hidden" id="routeFromLat" />
+                <input type="hidden" id="routeFromLng" />
+                <div class="place-suggestions" id="suggestionsFrom"></div>
+            </div>
+            
+            <div class="position-relative mb-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text" style="background:var(--bg-card);border-color:var(--glass-border);color:#ff6b6b"><i class="fa-solid fa-flag-checkered"></i></span>
+                    <input type="text" class="form-control form-control-sm" id="routeTo" placeholder="To..." autocomplete="off" />
+                </div>
+                <input type="hidden" id="routeToLat" />
+                <input type="hidden" id="routeToLng" />
+                <div class="place-suggestions" id="suggestionsTo"></div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary-glow btn-sm flex-grow-1" id="btnFindRoute"><i class="fa-solid fa-search me-1"></i> Find Route</button>
+                <button class="btn btn-glass btn-sm" id="btnClearRoute"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Right Floating Toolbar (Map Tools) -->
+    <div class="map-overlay-panel top-right-toolbar">
+        <div class="glass-toolbar">
+            <button class="tool-btn" id="btnMyLocation" title="My Location"><i class="fa-solid fa-crosshairs"></i></button>
+            <button class="tool-btn" id="btnHeatmap" title="Toggle Heatmap"><i class="fa-solid fa-fire"></i></button>
+            <button class="tool-btn" id="btnEmergency" title="Toggle Emergency Services"><i class="fa-solid fa-hospital"></i></button>
+            <button class="tool-btn" id="btnRoute" title="Find Safe Route"><i class="fa-solid fa-route"></i></button>
+        </div>
+    </div>
+
+    <!-- Bottom Right Floating Button (Report) -->
+    <div class="map-overlay-panel bottom-right-panel">
+        <button class="btn btn-danger-glow btn-lg rounded-pill shadow-lg px-4" data-bs-toggle="modal" data-bs-target="#reportModal">
+            <i class="fa-solid fa-plus me-2"></i> Report
+        </button>
+        <div class="small text-muted-custom text-end mt-2" id="myLocationInfo" style="display:none; background: var(--glass-bg); padding: 4px 8px; border-radius: 4px; backdrop-filter: blur(8px);">
+            <i class="fa-solid fa-location-dot text-accent me-1"></i><span id="myLocationText"></span>
+        </div>
+    </div>
+
+    <!-- Bottom Left Floating Legend -->
+    <div class="map-overlay-panel bottom-left-panel">
+        <div class="glass-card p-2 legend-container">
+            <div class="d-flex flex-column gap-1" style="font-size: 0.8rem;">
+                <span class="legend-item"><i class="fa-solid fa-circle text-success me-2"></i> Safe</span>
+                <span class="legend-item"><i class="fa-solid fa-circle text-warning me-2"></i> Moderate</span>
+                <span class="legend-item"><i class="fa-solid fa-circle text-danger me-2"></i> Risky</span>
+                <span class="legend-item"><i class="fa-solid fa-street-view text-primary me-2"></i> My Location</span>
+                <span class="legend-item"><i class="fa-solid fa-building-shield" style="color:var(--accent-light)"></i> Police</span>
+                <span class="legend-item"><i class="fa-solid fa-hospital text-info me-2"></i> Hospital</span>
+                <span class="legend-item"><i class="fa-solid fa-fire-extinguisher text-warning me-2"></i> Fire</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Full Screen Wrapper */
+    .map-wrapper {
+        position: relative;
+        width: 100vw;
+        height: calc(100vh - 76px); /* subtract navbar height */
+        margin-left: calc(-50vw + 50%); /* ensure strict full width */
+        overflow: hidden;
+    }
+    .fullscreen-map {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+
+    /* Base panel styles */
+    .map-overlay-panel {
+        position: absolute;
+        z-index: 1000;
+        pointer-events: none; /* Let clicks pass through empty areas */
+    }
+    .map-overlay-panel > * {
+        pointer-events: auto; /* Re-enable clicks on actual elements */
+    }
+
+    /* Specific Placements */
+    .top-left-panel { top: 20px; left: 20px; width: 320px; }
+    .top-right-toolbar { top: 20px; right: 20px; }
+    .bottom-right-panel { bottom: 30px; right: 30px; display: flex; flex-direction: column; align-items: flex-end; }
+    .bottom-left-panel { bottom: 30px; left: 20px; }
+
+    /* Custom UI Elements */
+    .glass-toolbar {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-xl);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 5px;
+        box-shadow: var(--shadow-md);
+    }
+    .tool-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+    }
+    .tool-btn:hover, .tool-btn.active {
+        background: rgba(108, 92, 231, 0.2);
+        color: var(--accent-light);
+    }
+    
+    .legend-container {
+        pointer-events: auto;
+        opacity: 0.9;
+        transition: opacity 0.3s;
+    }
+    .legend-container:hover { opacity: 1; }
+    .legend-item { display: flex; align-items: center; }
+
+    /* Fix place suggestions inside overlay */
+    .place-suggestions {
+        position: absolute; top: 100%; left: 0; right: 0; z-index: 9999;
+        background: var(--bg-card); border: 1px solid var(--border-color);
+        border-radius: 8px; max-height: 250px; overflow-y: auto; display: none;
+        box-shadow: var(--shadow-md); margin-top: 4px;
+    }
+    .place-suggestions.show { display: block; }
+    .place-item {
+        padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border-color);
+        transition: background 0.15s; font-size: 0.85rem;
+    }
+    .place-item:hover { background: rgba(108,92,231,0.15); }
+    .place-item:last-child { border-bottom: none; }
+    .place-item .place-name { font-weight: 600; color: var(--text-primary); }
+    .place-item .place-addr { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+    .place-item .place-type { font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; background: rgba(108,92,231,0.15); color: var(--accent-light); margin-left: 6px; font-weight: 600; }
+    .place-loading { padding: 12px; text-align: center; color: var(--text-secondary); font-size: 0.85rem; }
+
+    /* Hide global SOS FAB on map view */
+    body:has(.fullscreen-map) .sos-fab { display: none !important; }
+</style>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content dark-modal">
+      <div class="modal-header px-4 pt-4 border-0">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> Report an Incident</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+          <form id="incidentForm">
+              <input type="hidden" id="latInput" name="Latitude">
+              <input type="hidden" id="lngInput" name="Longitude">
+              <div class="mb-3">
+                  <label class="form-label">📍 Selected Location</label>
+                  <input type="text" id="displayLocation" class="form-control" readonly>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label">📌 Location Name</label>
+                  <input type="text" id="locationName" name="LocationName" class="form-control" placeholder="e.g. Dhanmondi Lake, Farmgate..." maxlength="200">
+                  <small class="text-muted-custom">Enter the area/place name for easy identification</small>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label">Category</label>
+                  <select class="form-select" id="categoryId" name="CategoryId" required>
+                      <option value="" disabled selected>Choose type...</option>
+                      <option value="1">🚨 Harassment</option>
+                      <option value="2">🔪 Theft / Robbery</option>
+                      <option value="3">🌑 Dark Zone</option>
+                      <option value="4">👁️ Suspicious Activity</option>
+                      <option value="5">🚗 Accident</option>
+                      <option value="6">😡 Eve Teasing</option>
+                      <option value="7">💊 Drug Activity</option>
+                  </select>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-control" id="description" name="Description" rows="3" placeholder="Describe what happened..." required></textarea>
+              </div>
+              <div class="form-check form-switch mb-4">
+                  <input class="form-check-input" type="checkbox" id="isAnonymous" name="IsAnonymous" value="true">
+                  <label class="form-check-label text-muted-custom" for="isAnonymous">Submit Anonymously</label>
+              </div>
+              <div class="d-grid">
+                  <button type="submit" class="btn btn-danger-glow btn-lg"><i class="fa-solid fa-paper-plane me-2"></i> Submit Report</button>
+              </div>
+          </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Area Rating Modal -->
+<div class="modal fade" id="ratingModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content dark-modal">
+      <div class="modal-header px-4 pt-4 border-0">
+        <h5 class="modal-title fw-bold"><i class="fa-solid fa-star text-warning me-2"></i> Rate This Area</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+          <input type="hidden" id="ratingLat">
+          <input type="hidden" id="ratingLng">
+          <p class="text-muted small mb-3" id="ratingLocationDisplay">Location: ...</p>
+          <div class="mb-3">
+              <label class="form-label">💡 Lighting <span class="badge bg-secondary" id="lightingVal">3</span></label>
+              <input type="range" class="form-range" min="1" max="5" value="3" id="lightingScore" oninput="document.getElementById('lightingVal').textContent=this.value">
+          </div>
+          <div class="mb-3">
+              <label class="form-label">👥 Crowd Level <span class="badge bg-secondary" id="crowdVal">3</span></label>
+              <input type="range" class="form-range" min="1" max="5" value="3" id="crowdScore" oninput="document.getElementById('crowdVal').textContent=this.value">
+          </div>
+          <div class="mb-3">
+              <label class="form-label">🚔 Police Presence <span class="badge bg-secondary" id="policeVal">3</span></label>
+              <input type="range" class="form-range" min="1" max="5" value="3" id="policeScore" oninput="document.getElementById('policeVal').textContent=this.value">
+          </div>
+          <div class="mb-3">
+              <label class="form-label">⭐ Overall Safety <span class="badge bg-secondary" id="overallVal">3</span></label>
+              <input type="range" class="form-range" min="1" max="5" value="3" id="overallScore" oninput="document.getElementById('overallVal').textContent=this.value">
+          </div>
+          <div class="d-grid">
+              <button class="btn btn-primary-glow btn-lg" id="submitRating"><i class="fa-solid fa-star me-2"></i> Submit Rating</button>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ======== TIME RISK UTILITY ========
+    function getTimeRisk(hour) {
+        if (hour >= 6 && hour < 18)  return { level:'Low',     color:'#00d2d3', bg:'rgba(0,210,211,0.15)',  border:'rgba(0,210,211,0.3)',  icon:'☀️', label:'Daytime — Low Risk' };
+        if (hour >= 18 && hour < 21) return { level:'Moderate', color:'#feca57', bg:'rgba(254,202,87,0.15)', border:'rgba(254,202,87,0.3)', icon:'🌆', label:'Evening — Moderate Risk' };
+        return                              { level:'High',    color:'#ff6b6b', bg:'rgba(255,107,107,0.15)', border:'rgba(255,107,107,0.3)', icon:'🌙', label:'Nighttime — High Risk' };
+    }
+
+    var simulatedHour = -1;
+    function getActiveHour() { return simulatedHour >= 0 ? simulatedHour : new Date().getHours(); }
+
+    function updateTimeClock() {
+        var hour = getActiveHour();
+        var risk = getTimeRisk(hour);
+        var now = new Date();
+        if (simulatedHour >= 0) {
+            var h12 = hour % 12 || 12;
+            document.getElementById('currentTime').textContent = h12 + ':00:00 ' + (hour < 12 ? 'AM' : 'PM') + ' (Simulated)';
+        } else {
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+        }
+        document.getElementById('timeIcon').textContent = risk.icon;
+        var badge = document.getElementById('riskBadge');
+        badge.textContent = risk.label;
+        badge.style.cssText = 'background:' + risk.bg + ';color:' + risk.color + ';border:1px solid ' + risk.border;
+        // Timeline
+        var tl = document.getElementById('timelineBar');
+        tl.innerHTML = '';
+        for (var h = 0; h < 24; h++) {
+            var r = getTimeRisk(h);
+            var bar = document.createElement('div');
+            bar.style.cssText = 'width:10px;height:' + (h===hour?'28':'14') + 'px;border-radius:3px;background:' + r.color + ';opacity:' + (h===hour?'1':'0.25') + ';transition:all .3s;cursor:pointer';
+            bar.title = h + ':00 — ' + r.level + ' Risk';
+            tl.appendChild(bar);
+        }
+    }
+    updateTimeClock();
+    setInterval(updateTimeClock, 1000);
+
+    // ======== MAP SETUP ========
+    var map = L.map('fullMap').setView([23.8103, 90.4125], 13);
+    var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' });
+    var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' });
+    
+    function applyMapTheme() {
+        var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        if (isLight) {
+            if (map.hasLayer(darkTiles)) map.removeLayer(darkTiles);
+            if (!map.hasLayer(lightTiles)) lightTiles.addTo(map);
+        } else {
+            if (map.hasLayer(lightTiles)) map.removeLayer(lightTiles);
+            if (!map.hasLayer(darkTiles)) darkTiles.addTo(map);
+        }
+    }
+    applyMapTheme(); // Set on load
+
+    // Watch for theme changes
+    new MutationObserver(applyMapTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    var reportModal = new bootstrap.Modal(document.getElementById('reportModal'));
+    var ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'));
+    var incidentMarkers = [];
+    var emergencyMarkers = [];
+    var heatLayer = null;
+    var routeControl = null;
+    var routeMode = false;
+    var routeClickCount = 0;
+
+    // ======== REVERSE GEOCODE ========
+    function reverseGeocode(lat, lng, callback) {
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1', {
+            headers: { 'Accept-Language': 'en' }
+        }).then(r => r.json()).then(data => {
+            callback(data.display_name || (lat.toFixed(4) + ', ' + lng.toFixed(4)));
+        }).catch(() => callback(lat.toFixed(4) + ', ' + lng.toFixed(4)));
+    }
+
+    // Click handler
+    map.on('click', function(e) {
+        if (routeMode) {
+            reverseGeocode(e.latlng.lat, e.latlng.lng, function(name) {
+                if (routeClickCount === 0) {
+                    document.getElementById('routeFrom').value = name;
+                    document.getElementById('routeFromLat').value = e.latlng.lat;
+                    document.getElementById('routeFromLng').value = e.latlng.lng;
+                    routeClickCount = 1;
+                } else {
+                    document.getElementById('routeTo').value = name;
+                    document.getElementById('routeToLat').value = e.latlng.lat;
+                    document.getElementById('routeToLng').value = e.latlng.lng;
+                    routeClickCount = 0;
+                }
+            });
+            return;
+        }
+        document.getElementById('latInput').value = e.latlng.lat;
+        document.getElementById('lngInput').value = e.latlng.lng;
+        // Reverse geocode for display
+        reverseGeocode(e.latlng.lat, e.latlng.lng, function(name) {
+            document.getElementById('displayLocation').value = name;
+            document.getElementById('locationName').value = name.split(',')[0];
+        });
+        // Also set for rating
+        document.getElementById('ratingLat').value = e.latlng.lat;
+        document.getElementById('ratingLng').value = e.latlng.lng;
+        reverseGeocode(e.latlng.lat, e.latlng.lng, function(name) {
+            document.getElementById('ratingLocationDisplay').textContent = '📍 ' + name;
+        });
+        // Show context menu popup
+        L.popup().setLatLng(e.latlng).setContent(
+            '<div style="text-align:center"><b>📍 Loading address...</b><br><br>' +
+            '<button class="btn btn-sm btn-danger me-1" onclick="new bootstrap.Modal(document.getElementById(\'reportModal\')).show();">🚨 Report</button>' +
+            '<button class="btn btn-sm btn-warning" onclick="new bootstrap.Modal(document.getElementById(\'ratingModal\')).show();">⭐ Rate Area</button></div>'
+        ).openOn(map);
+        reverseGeocode(e.latlng.lat, e.latlng.lng, function(name) {
+            if (map._popup) map._popup.setContent(
+                '<div style="text-align:center"><b>📍 ' + name.split(',').slice(0, 3).join(', ') + '</b><br><br>' +
+                '<button class="btn btn-sm btn-danger me-1" onclick="new bootstrap.Modal(document.getElementById(\'reportModal\')).show();">🚨 Report</button>' +
+                '<button class="btn btn-sm btn-warning" onclick="new bootstrap.Modal(document.getElementById(\'ratingModal\')).show();">⭐ Rate Area</button></div>'
+            );
+        });
+    });
+
+    // ======== ICONS ========
+    function makeIcon(color) {
+        return new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-' + color + '.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize:[25,41], iconAnchor:[12,41], popupAnchor:[1,-34], shadowSize:[41,41]
+        });
+    }
+    var redIcon    = makeIcon('red');
+    var yellowIcon = makeIcon('gold');
+    var greenIcon  = makeIcon('green');
+    var blueIcon2  = makeIcon('blue');
+    var violetIcon = makeIcon('violet');
+
+    function getMarkerIcon(hour) {
+        var risk = getTimeRisk(hour);
+        return risk.level === 'High' ? redIcon : risk.level === 'Moderate' ? yellowIcon : greenIcon;
+    }
+
+    // ======== MY LOCATION ========
+    var myLocationMarker = null, myLocationCircle = null;
+
+    function showMyLocation() {
+        var btn = document.getElementById('btnMyLocation');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Locating...';
+        btn.disabled = true;
+        if (!navigator.geolocation) { btn.innerHTML = '<i class="fa-solid fa-crosshairs me-1"></i> My Location'; btn.disabled = false; return; }
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            var lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
+            if (myLocationMarker) map.removeLayer(myLocationMarker);
+            if (myLocationCircle) map.removeLayer(myLocationCircle);
+            myLocationCircle = L.circle([lat, lng], { radius: acc, color: '#5dade2', fillColor: '#5dade2', fillOpacity: 0.1, weight: 1 }).addTo(map);
+            var locIcon = L.divIcon({
+                className: 'my-location-pin',
+                html: '<div style="width:18px;height:18px;background:#5dade2;border:3px solid #fff;border-radius:50%;box-shadow:0 0 12px rgba(93,173,226,0.8);"></div>',
+                iconSize: [18, 18], iconAnchor: [9, 9]
+            });
+            myLocationMarker = L.marker([lat, lng], { icon: locIcon, zIndexOffset: 1000 }).addTo(map)
+                .bindPopup('<b>📍 You are here!</b><br><small>Lat: ' + lat.toFixed(4) + ', Lng: ' + lng.toFixed(4) + '</small>').openPopup();
+            map.setView([lat, lng], 15);
+            document.getElementById('myLocationInfo').style.display = 'inline';
+            document.getElementById('myLocationText').textContent = lat.toFixed(4) + ', ' + lng.toFixed(4);
+            // Store coords for route
+            document.getElementById('routeFromLat').value = lat;
+            document.getElementById('routeFromLng').value = lng;
+            reverseGeocode(lat, lng, function(name) {
+                document.getElementById('routeFrom').value = name.split(',').slice(0, 3).join(', ');
+            });
+            btn.innerHTML = '<i class="fa-solid fa-crosshairs me-1"></i> My Location';
+            btn.disabled = false;
+        }, function() {
+            btn.innerHTML = '<i class="fa-solid fa-crosshairs me-1"></i> My Location';
+            btn.disabled = false;
+        }, { enableHighAccuracy: true, timeout: 10000 });
+    }
+    document.getElementById('btnMyLocation').addEventListener('click', showMyLocation);
+    showMyLocation();
+
+    // ======== INCIDENTS ========
+    var allIncidents = [];
+
+    function loadIncidents() {
+        fetch('/api/Incident').then(r => r.json()).then(data => { allIncidents = data; renderIncidents(); });
+    }
+
+    function renderIncidents() {
+        incidentMarkers.forEach(m => map.removeLayer(m));
+        incidentMarkers = [];
+        var hour = getActiveHour();
+        var currentIcon = getMarkerIcon(hour);
+        var currentRisk = getTimeRisk(hour);
+
+        allIncidents.forEach(i => {
+            var rHour = new Date(i.reportDate).getHours();
+            var ri = getTimeRisk(rHour);
+            var confirmBadge = i.confirmCount > 0 ? '<span style="color:#00d2d3">👍 ' + i.confirmCount + '</span> ' : '';
+            var fakeBadge = i.fakeCount > 0 ? '<span style="color:#ff6b6b">👎 ' + i.fakeCount + '</span>' : '';
+            var communityVerified = i.confirmCount >= 3 ? '<br><span style="padding:2px 8px;border-radius:10px;font-size:0.7rem;background:rgba(0,210,211,0.2);color:#00d2d3;">✅ Community Verified</span>' : '';
+
+            var marker = L.marker([i.latitude, i.longitude], { icon: currentIcon }).addTo(map)
+                .bindPopup(
+                    '<div style="min-width:220px;">' +
+                    '<b>' + i.category + '</b>' + (i.locationName ? ' — ' + i.locationName : '') + '<br>' +
+                    '<small style="color:#888;">Reported: ' + new Date(i.reportDate).toLocaleString('en-US', {hour:'2-digit',minute:'2-digit',hour12:true,day:'numeric',month:'short'}) + '</small><br>' +
+                    '<span style="display:inline-block;margin:4px 0;padding:2px 8px;border-radius:10px;font-size:0.7rem;background:' + ri.bg + ';color:' + ri.color + ';border:1px solid ' + ri.border + '">' + ri.icon + ' ' + ri.level + ' Risk Hour</span><br>' +
+                    '<span>' + i.description + '</span>' + communityVerified + '<br><br>' +
+                    '<div style="display:flex;gap:6px;align-items:center">' +
+                    '<button class="btn btn-sm btn-outline-success" onclick="voteIncident(' + i.id + ',true)">👍 Confirm</button>' +
+                    '<button class="btn btn-sm btn-outline-danger" onclick="voteIncident(' + i.id + ',false)">👎 Fake</button>' +
+                    '<small>' + confirmBadge + fakeBadge + '</small>' +
+                    '</div></div>'
+                );
+            incidentMarkers.push(marker);
+        });
+    }
+    loadIncidents();
+
+    // ======== VOTE ========
+    window.voteIncident = function(id, isConfirm) {
+        fetch('/api/Incident/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ incidentId: id, isConfirm: isConfirm })
+        }).then(r => r.json()).then(() => loadIncidents()).catch(() => alert('Please login to vote.'));
+    };
+
+    // ======== HEATMAP ========
+    var heatmapOn = false;
+    document.getElementById('btnHeatmap').addEventListener('click', function() {
+        heatmapOn = !heatmapOn;
+        this.classList.toggle('active', heatmapOn);
+        if (heatmapOn) {
+            var points = allIncidents.map(i => [i.latitude, i.longitude, 0.8]);
+            if (heatLayer) map.removeLayer(heatLayer);
+            heatLayer = L.heatLayer(points, { radius: 30, blur: 20, maxZoom: 17, gradient: {0.2: '#00d2d3', 0.5: '#feca57', 0.8: '#ff6b6b', 1: '#ee5a24'} }).addTo(map);
+        } else {
+            if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+        }
+    });
+
+    // ======== EMERGENCY SERVICES ========
+    var emergencyOn = false;
+    document.getElementById('btnEmergency').addEventListener('click', function() {
+        emergencyOn = !emergencyOn;
+        this.classList.toggle('active', emergencyOn);
+        if (emergencyOn) {
+            fetch('/api/Emergency').then(r => r.json()).then(data => {
+                data.forEach(s => {
+                    var emoji = s.type === 'Police' ? '🚔' : s.type === 'Hospital' ? '🏥' : '🚒';
+                    var color = s.type === 'Police' ? '#6c5ce7' : s.type === 'Hospital' ? '#00d2d3' : '#ffa500';
+                    var icon = L.divIcon({
+                        className: '',
+                        html: '<div style="background:' + color + ';width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3)">' + emoji + '</div>',
+                        iconSize: [32,32], iconAnchor: [16,16]
+                    });
+                    var m = L.marker([s.latitude, s.longitude], { icon: icon }).addTo(map)
+                        .bindPopup('<b>' + emoji + ' ' + s.name + '</b><br>📞 <a href="tel:' + s.contactNumber + '">' + s.contactNumber + '</a>');
+                    emergencyMarkers.push(m);
+                });
+            });
+        } else {
+            emergencyMarkers.forEach(m => map.removeLayer(m));
+            emergencyMarkers = [];
+        }
+    });
+
+    // ======== PLACE SEARCH (Nominatim Autocomplete) ========
+    var searchTimers = {};
+
+    function setupPlaceSearch(inputId, suggestionsId, latId, lngId) {
+        var input = document.getElementById(inputId);
+        var box = document.getElementById(suggestionsId);
+
+        input.addEventListener('input', function() {
+            var q = this.value.trim();
+            clearTimeout(searchTimers[inputId]);
+            if (q.length < 2) { box.classList.remove('show'); return; }
+            box.innerHTML = '<div class="place-loading"><i class="fa-solid fa-spinner fa-spin me-1"></i> Searching...</div>';
+            box.classList.add('show');
+            searchTimers[inputId] = setTimeout(function() {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q) + '&countrycodes=bd&limit=6&addressdetails=1', {
+                    headers: { 'Accept-Language': 'en' }
+                }).then(r => r.json()).then(results => {
+                    if (results.length === 0) {
+                        box.innerHTML = '<div class="place-loading">No places found. Try a different name.</div>';
+                        return;
+                    }
+                    box.innerHTML = '';
+                    results.forEach(p => {
+                        var shortName = p.display_name.split(',').slice(0, 3).join(', ');
+                        var fullAddr = p.display_name.split(',').slice(3).join(', ').trim();
+                        var typeLabel = (p.type || '').replace(/_/g, ' ');
+                        var item = document.createElement('div');
+                        item.className = 'place-item';
+                        item.innerHTML = '<div class="place-name">' + shortName + (typeLabel ? '<span class="place-type">' + typeLabel + '</span>' : '') + '</div>' +
+                                         (fullAddr ? '<div class="place-addr">' + fullAddr + '</div>' : '');
+                        item.addEventListener('click', function() {
+                            input.value = shortName;
+                            document.getElementById(latId).value = p.lat;
+                            document.getElementById(lngId).value = p.lon;
+                            box.classList.remove('show');
+                            map.setView([parseFloat(p.lat), parseFloat(p.lon)], 15);
+                        });
+                        box.appendChild(item);
+                    });
+                }).catch(() => { box.innerHTML = '<div class="place-loading">Search error. Try again.</div>'; });
+            }, 400);
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(ev) {
+            if (!input.contains(ev.target) && !box.contains(ev.target)) box.classList.remove('show');
+        });
+    }
+
+    setupPlaceSearch('routeFrom', 'suggestionsFrom', 'routeFromLat', 'routeFromLng');
+    setupPlaceSearch('routeTo', 'suggestionsTo', 'routeToLat', 'routeToLng');
+
+    // ======== SAFE ROUTE ========
+    document.getElementById('btnRoute').addEventListener('click', function() {
+        routeMode = !routeMode;
+        this.classList.toggle('active', routeMode);
+        document.getElementById('routePanel').style.display = routeMode ? 'block' : 'none';
+        routeClickCount = 0;
+    });
+
+    // Use My Location button
+    document.getElementById('btnUseMyLoc').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                document.getElementById('routeFromLat').value = pos.coords.latitude;
+                document.getElementById('routeFromLng').value = pos.coords.longitude;
+                reverseGeocode(pos.coords.latitude, pos.coords.longitude, function(name) {
+                    document.getElementById('routeFrom').value = name.split(',').slice(0, 3).join(', ');
+                });
+            });
+        }
+    });
+
+    document.getElementById('btnFindRoute').addEventListener('click', function() {
+        var fromLat = parseFloat(document.getElementById('routeFromLat').value);
+        var fromLng = parseFloat(document.getElementById('routeFromLng').value);
+        var toLat = parseFloat(document.getElementById('routeToLat').value);
+        var toLng = parseFloat(document.getElementById('routeToLng').value);
+        if (isNaN(fromLat) || isNaN(fromLng)) { alert('Please select a "From" location by typing a place name or clicking the map.'); return; }
+        if (isNaN(toLat) || isNaN(toLng)) { alert('Please select a "To" location by typing a place name or clicking the map.'); return; }
+        if (routeControl) map.removeControl(routeControl);
+        routeControl = L.Routing.control({
+            waypoints: [L.latLng(fromLat, fromLng), L.latLng(toLat, toLng)],
+            routeWhileDragging: true,
+            lineOptions: { styles: [{ color: '#6c5ce7', weight: 5, opacity: 0.8 }] },
+            createMarker: function(i, wp) {
+                return L.marker(wp.latLng, { icon: i === 0 ? greenIcon : redIcon });
+            },
+            show: false
+        }).addTo(map);
+    });
+
+    document.getElementById('btnClearRoute').addEventListener('click', function() {
+        if (routeControl) { map.removeControl(routeControl); routeControl = null; }
+        document.getElementById('routeFrom').value = '';
+        document.getElementById('routeTo').value = '';
+        document.getElementById('routeFromLat').value = '';
+        document.getElementById('routeFromLng').value = '';
+        document.getElementById('routeToLat').value = '';
+        document.getElementById('routeToLng').value = '';
+    });
+
+    // ======== AREA RATING ========
+    document.getElementById('submitRating').addEventListener('click', function() {
+        var data = {
+            latitude: parseFloat(document.getElementById('ratingLat').value),
+            longitude: parseFloat(document.getElementById('ratingLng').value),
+            lightingScore: parseInt(document.getElementById('lightingScore').value),
+            crowdScore: parseInt(document.getElementById('crowdScore').value),
+            policeScore: parseInt(document.getElementById('policeScore').value),
+            overallScore: parseInt(document.getElementById('overallScore').value)
+        };
+        fetch('/api/SafetyRating', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(r => { if (r.ok) { ratingModal.hide(); alert('Rating submitted! ⭐'); } else { alert('Please login to rate.'); } })
+          .catch(() => alert('Error submitting rating.'));
+    });
+
+    // ======== TIME SEARCH ========
+    document.getElementById('btnApplyTime').addEventListener('click', function() {
+        var val = parseInt(document.getElementById('timeSearch').value);
+        simulatedHour = val;
+        document.getElementById('simulationStatus').style.display = val >= 0 ? 'inline-block' : 'none';
+        updateTimeClock();
+        renderIncidents();
+    });
+
+    // ======== FORM SUBMIT ========
+    document.getElementById('incidentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fd = new FormData(this);
+        const d = Object.fromEntries(fd.entries());
+        d.Latitude = parseFloat(d.Latitude); d.Longitude = parseFloat(d.Longitude);
+        d.CategoryId = parseInt(d.CategoryId); d.IsAnonymous = d.IsAnonymous === "true";
+        fetch('/api/Incident', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(d)
+        }).then(r => r.json()).then(result => {
+            if (result.success) { reportModal.hide(); loadIncidents(); this.reset(); }
+            else { alert("Failed: " + result.message); }
+        }).catch(() => alert("An error occurred."));
+    });
+});
+</script>
+}

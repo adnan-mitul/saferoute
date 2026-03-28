@@ -1,0 +1,483 @@
+@{
+    ViewData["Title"] = "SafeRoute — Community Safety Platform";
+}
+
+<!-- Floating Gradient Orbs (CSS only ambient animation) -->
+<div class="hero-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 fade-up">
+                <div class="mb-3">
+                    <span class="badge badge-safe rounded-pill px-3 py-2 hero-live-badge">
+                        <span class="live-dot"></span>
+                        <i class="fa-solid fa-signal me-1"></i> Live Safety Status
+                    </span>
+                </div>
+                <h1 class="hero-title mb-3">
+                    Navigate Your City<br>
+                    <span class="highlight" id="typingText"></span>
+                    <span class="typing-cursor">|</span>
+                </h1>
+                <p class="hero-subtitle mb-4">
+                    SafeRoute uses real-time community intelligence to identify risky areas,
+                    display safety heatmaps, and help you find the safest path to your destination.
+                </p>
+                <div class="d-flex gap-3 flex-wrap mb-4">
+                    <a asp-controller="Home" asp-action="Map" class="btn btn-accent btn-lg px-4">
+                        <i class="fa-solid fa-map-location-dot me-2"></i> Explore Map
+                    </a>
+                    <a asp-controller="Home" asp-action="Incidents" class="btn btn-glass btn-lg px-4">
+                        <i class="fa-solid fa-list me-2"></i> View Reports
+                    </a>
+                </div>
+                <!-- Trust Bar -->
+                <div class="hero-trust-bar">
+                    <div class="trust-avatars">
+                        <div class="trust-avatar" style="background:#6c5ce7">👤</div>
+                        <div class="trust-avatar" style="background:#00d2d3">👤</div>
+                        <div class="trust-avatar" style="background:#ff6b6b">👤</div>
+                        <div class="trust-avatar" style="background:#feca57;color:#333">👤</div>
+                    </div>
+                    <span class="trust-text">
+                        <strong>@(ViewBag.TotalUsers ?? 0)+</strong> users trust SafeRoute for daily safety
+                    </span>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center fade-up fade-up-delay-2 d-none d-lg-block">
+                <div class="hero-map-wrapper">
+                    <div class="hero-map-glow"></div>
+                    <div class="glass-card p-3" style="position:relative;z-index:2;">
+                        <div id="heroMiniMap" style="height: 340px; border-radius: 12px;"></div>
+                    </div>
+                    <div class="hero-map-badge">
+                        <i class="fa-solid fa-shield-halved me-1"></i> Live Community Data
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STATS SECTION (Real Data + Count-Up) ===== -->
+<section id="stats" class="py-4">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-6 col-md-3 scroll-reveal">
+                <div class="stat-card stat-danger text-center">
+                    <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="stat-number text-danger" data-count="@(ViewBag.TotalReports ?? 0)">0</div>
+                    <div class="stat-label mt-1">Reports Filed</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 scroll-reveal" style="--delay:0.1s">
+                <div class="stat-card stat-warning text-center">
+                    <div class="stat-icon" style="color:var(--warning)"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-number" style="color: var(--warning);" data-count="@(ViewBag.TotalUsers ?? 0)">0</div>
+                    <div class="stat-label mt-1">Active Users</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 scroll-reveal" style="--delay:0.2s">
+                <div class="stat-card stat-success text-center">
+                    <div class="stat-icon" style="color:var(--success)"><i class="fa-solid fa-star"></i></div>
+                    <div class="stat-number" style="color: var(--success);" data-count="@(ViewBag.AreasVerified ?? 0)">0</div>
+                    <div class="stat-label mt-1">Areas Rated</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 scroll-reveal" style="--delay:0.3s">
+                <div class="stat-card stat-accent text-center">
+                    <div class="stat-icon"><i class="fa-solid fa-bell text-accent"></i></div>
+                    <div class="stat-number text-accent" data-count="@(ViewBag.SOSAlerts ?? 0)">0</div>
+                    <div class="stat-label mt-1">SOS Alerts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== KEY FEATURES SHOWCASE ===== -->
+<section class="py-5">
+    <div class="container">
+        <div class="section-header text-center mb-5 scroll-reveal">
+            <span class="badge badge-safe rounded-pill px-3 py-2 mb-3">
+                <i class="fa-solid fa-sparkles me-1"></i> Core Features
+            </span>
+            <h2 class="section-title fs-2">Everything You Need to Stay Safe</h2>
+            <p class="section-subtitle">Powerful tools designed to protect you and your community</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3 scroll-reveal">
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="--fc: var(--accent); --fc-bg: rgba(108,92,231,0.15);">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">Safety Heatmap</h5>
+                    <p class="text-muted-custom small mb-0">Color-coded zones show risk levels at a glance — green (safe), yellow (moderate), red (dangerous).</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 scroll-reveal" style="--delay:0.1s">
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="--fc: var(--danger); --fc-bg: rgba(255,107,107,0.15);">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">SOS Emergency</h5>
+                    <p class="text-muted-custom small mb-0">One-tap SOS with countdown, auto-SMS to trusted contacts, alarm sound, and shake detection.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 scroll-reveal" style="--delay:0.2s">
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="--fc: var(--success); --fc-bg: rgba(0,210,211,0.15);">
+                        <i class="fa-solid fa-route"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">Safe Routing</h5>
+                    <p class="text-muted-custom small mb-0">Find the safest path between any two locations with place name search — no coordinates needed.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3 scroll-reveal" style="--delay:0.3s">
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="--fc: var(--warning); --fc-bg: rgba(254,202,87,0.15);">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3 mb-2">Community Intel</h5>
+                    <p class="text-muted-custom small mb-0">Community-driven reports with voting, area ratings, and safety verification by real users.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="py-5" style="background: var(--bg-card);">
+    <div class="container">
+        <div class="section-header text-center mb-5 scroll-reveal">
+            <span class="badge rounded-pill px-3 py-2 mb-3" style="background:rgba(108,92,231,0.15);color:var(--accent-light);border:1px solid rgba(108,92,231,0.3);">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Simple & Effective
+            </span>
+            <h2 class="section-title fs-2">How SafeRoute Works</h2>
+            <p class="section-subtitle">Three simple steps to stay safe</p>
+        </div>
+        <div class="row g-4 text-center position-relative">
+            <!-- Step connector line (desktop) -->
+            <div class="step-connector d-none d-md-block"></div>
+            <div class="col-md-4 scroll-reveal">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon-circle">
+                        <i class="fa-solid fa-map-pin"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 mt-3">Select Location</h5>
+                    <p class="text-muted-custom small mb-0">Click any spot on the map or search by place name to check the safety status of an area.</p>
+                </div>
+            </div>
+            <div class="col-md-4 scroll-reveal" style="--delay:0.15s">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon-circle" style="--step-color: var(--warning);">
+                        <i class="fa-solid fa-file-circle-exclamation"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 mt-3">Report or Rate</h5>
+                    <p class="text-muted-custom small mb-0">Submit incident reports or rate area safety based on lighting, crowd presence, and police patrol.</p>
+                </div>
+            </div>
+            <div class="col-md-4 scroll-reveal" style="--delay:0.3s">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon-circle" style="--step-color: var(--success);">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 mt-3">Navigate Safely</h5>
+                    <p class="text-muted-custom small mb-0">Use real-time safety data, heatmaps, and community verified intelligence to plan your safest route.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== RECENT INCIDENTS FEED ===== -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4 scroll-reveal">
+            <div>
+                <h2 class="section-title"><i class="fa-solid fa-clock-rotate-left text-accent me-2"></i>Recent Reports</h2>
+                <p class="section-subtitle mb-0">Live feed from community submissions</p>
+            </div>
+            <a asp-controller="Home" asp-action="Incidents" class="btn btn-glass btn-sm">
+                View All <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+        <div class="row g-3">
+            @if (ViewBag.RecentIncidents != null)
+            {
+                foreach (var incident in ViewBag.RecentIncidents)
+                {
+                    var iconClass = incident.Category == "Harassment" ? "fa-hand" :
+                                    incident.Category == "Theft / Robbery" ? "fa-mask" :
+                                    incident.Category == "Dark Zone" ? "fa-moon" :
+                                    incident.Category == "Suspicious Activity" ? "fa-eye" : "fa-circle-exclamation";
+                    var statusClass = incident.Status == "Verified" ? "badge-safe" :
+                                     incident.Status == "Rejected" ? "badge-risky" : "badge-moderate";
+                    <div class="col-12 scroll-reveal">
+                        <div class="incident-feed-item">
+                            <div class="incident-feed-icon">
+                                <i class="fa-solid @iconClass"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="fw-bold">@incident.Category</span>
+                                        <span class="text-muted-custom mx-2">•</span>
+                                        <span class="text-muted-custom small"><i class="fa-solid fa-location-dot me-1"></i>@incident.Location</span>
+                                    </div>
+                                    <span class="badge @statusClass rounded-pill px-2 py-1 small">@incident.Status</span>
+                                </div>
+                                <p class="text-muted-custom small mb-0 mt-1" style="max-width:600px;">
+                                    @(incident.Description?.Length > 100 ? incident.Description.Substring(0, 100) + "..." : incident.Description)
+                                </p>
+                            </div>
+                            <div class="incident-feed-time text-end">
+                                <small class="text-muted-custom">@(((DateTime)incident.ReportDate).ToString("dd MMM"))</small>
+                                <br>
+                                <small class="text-muted-custom">@(((DateTime)incident.ReportDate).ToString("hh:mm tt"))</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12 text-center py-4">
+                    <i class="fa-solid fa-inbox text-muted-custom fs-2 mb-2 d-block"></i>
+                    <p class="text-muted-custom">No incidents reported yet. <a asp-controller="Home" asp-action="Map" class="text-accent">Be the first!</a></p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- ===== CTA SECTION ===== -->
+<section class="py-5">
+    <div class="container">
+        <div class="cta-section scroll-reveal">
+            <div class="cta-glow"></div>
+            <div class="text-center position-relative" style="z-index:2;">
+                <div class="mb-3" style="font-size:3rem;">🛡️</div>
+                <h2 class="fw-bold fs-2 mb-3">Ready to Navigate Safely?</h2>
+                <p class="text-muted-custom mb-4 mx-auto" style="max-width:500px;">
+                    Join our growing community of safety-conscious citizens. Report incidents, share intelligence, protect each other.
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-accent btn-lg px-5">
+                        <i class="fa-solid fa-user-plus me-2"></i> Get Started — Free
+                    </a>
+                    <a asp-controller="Home" asp-action="Map" class="btn btn-glass btn-lg px-4">
+                        <i class="fa-solid fa-map me-2"></i> Explore the Map
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== INLINE STYLES FOR LANDING PAGE ===== -->
+<style>
+    /* --- Floating Orbs --- */
+    .hero-orbs { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12; }
+    .orb-1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; animation: orbFloat1 18s ease-in-out infinite; }
+    .orb-2 { width: 350px; height: 350px; background: var(--success); bottom: -50px; right: -50px; animation: orbFloat2 22s ease-in-out infinite; }
+    .orb-3 { width: 280px; height: 280px; background: var(--danger); top: 40%; left: 60%; animation: orbFloat3 25s ease-in-out infinite; }
+    @@keyframes orbFloat1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(80px, 60px); } }
+    @@keyframes orbFloat2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-60px, -80px); } }
+    @@keyframes orbFloat3 { 0%,100% { transform: translate(0,0); } 33% { transform: translate(-40px, 30px); } 66% { transform: translate(50px, -40px); } }
+    [data-theme="light"] .orb { opacity: 0.06; }
+
+    /* --- Hero Live Badge --- */
+    .hero-live-badge { position: relative; }
+    .live-dot { display: inline-block; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 6px; animation: livePulse 1.5s ease-in-out infinite; }
+    @@keyframes livePulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,210,211,0.4); } 50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(0,210,211,0); } }
+
+    /* --- Typing Cursor --- */
+    .typing-cursor { animation: blink 0.8s step-end infinite; font-weight: 300; color: var(--accent-light); }
+    @@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* --- Trust Bar --- */
+    .hero-trust-bar { display: flex; align-items: center; gap: 12px; margin-top: 1rem; }
+    .trust-avatars { display: flex; }
+    .trust-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid var(--bg-dark); margin-left: -8px; }
+    .trust-avatar:first-child { margin-left: 0; }
+    .trust-text { font-size: 0.85rem; color: var(--text-secondary); }
+    [data-theme="light"] .trust-avatar { border-color: #fff; }
+
+    /* --- Hero Map Wrapper --- */
+    .hero-map-wrapper { position: relative; }
+    .hero-map-glow { position: absolute; top: 50%; left: 50%; width: 80%; height: 80%; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(108,92,231,0.2) 0%, transparent 70%); border-radius: 50%; z-index: 1; animation: mapGlow 4s ease-in-out infinite; }
+    @@keyframes mapGlow { 0%,100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } }
+    .hero-map-badge { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); z-index: 3; background: var(--bg-card); border: 1px solid var(--glass-border); padding: 6px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: var(--accent-light); white-space: nowrap; }
+
+    /* --- Stat Icon --- */
+    .stat-icon { font-size: 1.3rem; margin-bottom: 8px; opacity: 0.8; }
+
+    /* --- Feature Cards --- */
+    .feature-card {
+        background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+        padding: 2rem 1.5rem; height: 100%; transition: all 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden;
+    }
+    .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--fc, var(--accent)), transparent); opacity: 0; transition: opacity 0.3s; }
+    .feature-card:hover { transform: translateY(-8px); border-color: rgba(108,92,231,0.3); box-shadow: 0 16px 40px rgba(0,0,0,0.2); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon-wrap {
+        width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; color: var(--fc, var(--accent)); background: var(--fc-bg, rgba(108,92,231,0.15));
+        transition: all 0.3s;
+    }
+    .feature-card:hover .feature-icon-wrap { transform: scale(1.1) rotate(-5deg); }
+
+    /* --- Step Cards --- */
+    .step-card {
+        background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+        padding: 2.5rem 1.5rem 2rem; position: relative; transition: all 0.3s;
+    }
+    .step-card:hover { transform: translateY(-6px); border-color: rgba(108,92,231,0.3); }
+    .step-number { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); width: 28px; height: 28px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+    .step-icon-circle {
+        width: 64px; height: 64px; border-radius: 50%; margin: 0 auto;
+        display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        background: rgba(108,92,231,0.12); color: var(--step-color, var(--accent-light));
+        border: 2px solid rgba(108,92,231,0.2); transition: all 0.3s;
+    }
+    .step-card:hover .step-icon-circle { transform: scale(1.1); background: rgba(108,92,231,0.2); }
+    .step-connector { position: absolute; top: 85px; left: 20%; right: 20%; height: 2px; background: repeating-linear-gradient(90deg, var(--glass-border) 0, var(--glass-border) 8px, transparent 8px, transparent 16px); z-index: 0; }
+
+    /* --- Incident Feed --- */
+    .incident-feed-item {
+        display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+        background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+        transition: all 0.3s;
+    }
+    .incident-feed-item:hover { border-color: rgba(108,92,231,0.3); transform: translateX(4px); background: var(--bg-card-hover); }
+    .incident-feed-icon {
+        width: 42px; height: 42px; min-width: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        background: rgba(255,107,107,0.12); color: var(--danger); font-size: 1rem;
+    }
+    .incident-feed-time { min-width: 70px; }
+
+    /* --- CTA Section --- */
+    .cta-section {
+        position: relative; padding: 4rem 2rem; border-radius: var(--radius-xl); overflow: hidden;
+        background: var(--bg-card); border: 1px solid var(--glass-border);
+    }
+    .cta-glow {
+        position: absolute; top: 50%; left: 50%; width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(108,92,231,0.15) 0%, transparent 70%);
+        transform: translate(-50%,-50%); border-radius: 50%;
+    }
+    [data-theme="light"] .cta-section { background: #f8f9ff; }
+
+    /* --- Scroll Reveal Animation --- */
+    .scroll-reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; transition-delay: var(--delay, 0s); }
+    .scroll-reveal.revealed { opacity: 1; transform: translateY(0); }
+
+    /* --- Responsive --- */
+    @@media (max-width: 768px) {
+        .orb-1 { width: 200px; height: 200px; }
+        .orb-2 { width: 180px; height: 180px; }
+        .orb-3 { width: 140px; height: 140px; }
+        .feature-card { padding: 1.5rem 1rem; }
+        .cta-section { padding: 2.5rem 1.5rem; }
+        .incident-feed-time { display: none; }
+    }
+</style>
+
+@section Scripts {
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // ======== TYPING EFFECT ========
+    var phrases = ["With Confidence.", "With Real-Time Data.", "Without Fear.", "With Community Power."];
+    var el = document.getElementById('typingText');
+    var phraseIdx = 0, charIdx = 0, isDeleting = false;
+
+    function typeStep() {
+        var current = phrases[phraseIdx];
+        if (!isDeleting) {
+            el.textContent = current.substring(0, charIdx + 1);
+            charIdx++;
+            if (charIdx === current.length) { isDeleting = true; setTimeout(typeStep, 2000); return; }
+            setTimeout(typeStep, 80);
+        } else {
+            el.textContent = current.substring(0, charIdx - 1);
+            charIdx--;
+            if (charIdx === 0) { isDeleting = false; phraseIdx = (phraseIdx + 1) % phrases.length; setTimeout(typeStep, 400); return; }
+            setTimeout(typeStep, 40);
+        }
+    }
+    typeStep();
+
+    // ======== COUNT-UP ANIMATION ========
+    function animateCount(el) {
+        var target = parseInt(el.getAttribute('data-count')) || 0;
+        var duration = 1500;
+        var start = performance.now();
+
+        function step(now) {
+            var progress = Math.min((now - start) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+            el.textContent = Math.floor(eased * target);
+            if (progress < 1) requestAnimationFrame(step);
+            else el.textContent = target;
+        }
+        requestAnimationFrame(step);
+    }
+
+    // ======== SCROLL REVEAL (Intersection Observer) ========
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                // Trigger count-up for stat numbers
+                var counter = entry.target.querySelector('[data-count]');
+                if (counter && !counter.dataset.counted) {
+                    counter.dataset.counted = '1';
+                    animateCount(counter);
+                }
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.scroll-reveal').forEach(function(el) { observer.observe(el); });
+
+    // ======== HERO MINI MAP with Pulse Markers ========
+    var heroEl = document.getElementById('heroMiniMap');
+    if (heroEl) {
+        var heroMap = L.map('heroMiniMap', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false }).setView([23.8103, 90.4125], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(heroMap);
+
+        // Pulse markers
+        function addPulseMarker(lat, lng, color, label) {
+            var icon = L.divIcon({
+                className: '',
+                html: '<div style="position:relative"><div style="width:14px;height:14px;background:' + color + ';border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px ' + color + ';"></div><div style="position:absolute;top:-3px;left:-3px;width:20px;height:20px;border-radius:50%;background:' + color + ';opacity:0.3;animation:markerPulse 2s ease-in-out infinite;"></div></div>',
+                iconSize: [14, 14], iconAnchor: [7, 7]
+            });
+            L.marker([lat, lng], { icon: icon }).addTo(heroMap).bindPopup('<b>' + label + '</b>');
+        }
+
+        addPulseMarker(23.81, 90.41, '#00d2d3', '✅ Safe Zone');
+        addPulseMarker(23.79, 90.40, '#ff6b6b', '⚠️ Risky Area');
+        addPulseMarker(23.82, 90.43, '#00d2d3', '✅ Verified Safe');
+        addPulseMarker(23.77, 90.42, '#feca57', '🟡 Moderate');
+        addPulseMarker(23.80, 90.38, '#00d2d3', '✅ Community Verified');
+    }
+});
+</script>
+<style>
+    @@keyframes markerPulse { 0%,100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(2.5); opacity: 0; } }
+</style>
+}

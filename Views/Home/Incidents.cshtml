@@ -1,0 +1,104 @@
+﻿@model IEnumerable<SafeRoute.Models.IncidentReport>
+@{
+    ViewData["Title"] = "Incident Reports";
+}
+
+<section class="py-4">
+    <div class="container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="section-title"><i class="fa-solid fa-bell text-accent me-2"></i> All Incident Reports</h2>
+                <p class="section-subtitle mb-0">Browse and filter community-submitted safety reports.</p>
+            </div>
+            <a asp-controller="Home" asp-action="Map" class="btn btn-accent btn-sm">
+                <i class="fa-solid fa-plus me-1"></i> Report New
+            </a>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="glass-card p-3 mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm rounded-pill">
+                        <option selected>All Categories</option>
+                        <option>Harassment</option>
+                        <option>Theft / Robbery</option>
+                        <option>Dark Zone</option>
+                        <option>Suspicious Activity</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm rounded-pill">
+                        <option selected>All Status</option>
+                        <option>Pending</option>
+                        <option>Verified</option>
+                        <option>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control form-control-sm rounded-pill" placeholder="ðŸ” Search by location or description...">
+                </div>
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-glass btn-sm w-100"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="glass-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" style="background: transparent;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <th class="ps-4 py-3 text-muted-custom fw-bold small">#</th>
+                            <th class="py-3 text-muted-custom fw-bold small">CATEGORY</th>
+                            <th class="py-3 text-muted-custom fw-bold small">DESCRIPTION</th>
+                            <th class="py-3 text-muted-custom fw-bold small">LOCATION</th>
+                            <th class="py-3 text-muted-custom fw-bold small">DATE</th>
+                            <th class="py-3 text-muted-custom fw-bold small">STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            var i = 1;
+                            foreach (var report in Model)
+                            {
+                                var badgeClass = report.Status == "Verified" ? "badge-safe" :
+                                                 report.Status == "Rejected" ? "badge-risky" : "badge-moderate";
+                                <tr style="border-bottom: 1px solid var(--border-color);">
+                                    <td class="ps-4 py-3">@(i++)</td>
+                                    <td class="py-3">
+                                        <span class="badge badge-risky rounded-pill px-2 py-1">@report.Category?.Name</span>
+                                    </td>
+                                    <td class="py-3" style="max-width: 300px;">
+                                        <span class="text-truncate d-inline-block" style="max-width: 280px;">@report.Description</span>
+                                    </td>
+                                    <td class="py-3 text-muted-custom small">
+                                        <i class="fa-solid fa-location-dot text-accent me-1"></i>
+                                        @(report.LocationName ?? $"{report.Latitude:F3}, {report.Longitude:F3}")
+                                    </td>
+                                    <td class="py-3 text-muted-custom small">@report.ReportDate.ToString("dd MMM yyyy")</td>
+                                    <td class="py-3">
+                                        <span class="badge @badgeClass rounded-pill px-2 py-1">@report.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted-custom">
+                                    <i class="fa-solid fa-inbox fs-2 mb-3 d-block"></i>
+                                    No incidents reported yet. <a asp-controller="Home" asp-action="Map" class="text-accent">Be the first to report!</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+

@@ -1,0 +1,66 @@
+﻿@model List<SafeRoute.Models.IncidentReport>
+@{
+    ViewData["Title"] = "Manage Reports";
+}
+
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="fw-bold"><i class="fa-solid fa-clipboard-list me-2 text-accent"></i>Manage Reports</h2>
+        <a asp-action="Dashboard" class="btn btn-glass"><i class="fa-solid fa-arrow-left me-1"></i> Back</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-4 d-flex gap-2">
+        <a asp-action="ManageReports" class="btn @(ViewBag.CurrentFilter == null ? "btn-primary-glow" : "btn-glass") btn-sm">All</a>
+        <a asp-action="ManageReports" asp-route-status="Pending" class="btn @(ViewBag.CurrentFilter == "Pending" ? "btn-warning" : "btn-glass") btn-sm">Pending</a>
+        <a asp-action="ManageReports" asp-route-status="Verified" class="btn @(ViewBag.CurrentFilter == "Verified" ? "btn-success" : "btn-glass") btn-sm">Verified</a>
+        <a asp-action="ManageReports" asp-route-status="Rejected" class="btn @(ViewBag.CurrentFilter == "Rejected" ? "btn-danger" : "btn-glass") btn-sm">Rejected</a>
+    </div>
+
+    <div class="card glass-card p-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@r.Id</td>
+                            <td><span class="badge bg-secondary">@r.Category?.Name</span></td>
+                            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@r.Description</td>
+                            <td>@(r.LocationName ?? $"{r.Latitude:F3}, {r.Longitude:F3}")</td>
+                            <td>@r.ReportDate.ToString("MMM dd, HH:mm")</td>
+                            <td>
+                                @if (r.Status == "Pending") { <span class="badge bg-warning text-dark">Pending</span> }
+                                else if (r.Status == "Verified") { <span class="badge bg-success">Verified</span> }
+                                else { <span class="badge bg-danger">Rejected</span> }
+                            </td>
+                            <td>
+                                <form asp-action="UpdateReportStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <button name="status" value="Verified" class="btn btn-sm btn-success" title="Verify"><i class="fa-solid fa-check"></i></button>
+                                    <button name="status" value="Rejected" class="btn btn-sm btn-danger" title="Reject"><i class="fa-solid fa-xmark"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (!Model.Any())
+            {
+                <div class="text-center text-muted py-4">No reports found.</div>
+            }
+        </div>
+    </div>
+</div>
+

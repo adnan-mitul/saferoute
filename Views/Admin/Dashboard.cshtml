@@ -1,0 +1,118 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="fw-bold"><i class="fa-solid fa-shield-halved me-2 text-accent"></i>Admin Dashboard</h2>
+        <span class="badge bg-danger-glow px-3 py-2">ADMIN PANEL</span>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card glass-card text-center p-4">
+                <div class="stat-number text-danger">@ViewBag.TotalReports</div>
+                <div class="stat-label">TOTAL REPORTS</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-card text-center p-4">
+                <div class="stat-number" style="color: var(--warning)">@ViewBag.PendingReports</div>
+                <div class="stat-label">PENDING</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-card text-center p-4">
+                <div class="stat-number text-success">@ViewBag.VerifiedReports</div>
+                <div class="stat-label">VERIFIED</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-card text-center p-4">
+                <div class="stat-number text-accent">@ViewBag.TotalUsers</div>
+                <div class="stat-label">USERS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <a asp-action="ManageReports" class="card glass-card p-4 text-center text-decoration-none hover-lift">
+                <i class="fa-solid fa-clipboard-list fa-2x mb-2 text-accent"></i>
+                <div class="fw-semibold">Manage Reports</div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-action="ManageUsers" class="card glass-card p-4 text-center text-decoration-none hover-lift">
+                <i class="fa-solid fa-users fa-2x mb-2 text-accent"></i>
+                <div class="fw-semibold">Manage Users</div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a asp-action="ManageEmergency" class="card glass-card p-4 text-center text-decoration-none hover-lift">
+                <i class="fa-solid fa-hospital fa-2x mb-2 text-accent"></i>
+                <div class="fw-semibold">Emergency Services</div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-card p-4 text-center">
+                <div class="stat-number text-danger">@ViewBag.TotalSOS</div>
+                <div class="stat-label">SOS ALERTS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Reports -->
+    <div class="card glass-card p-4">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>Recent Reports</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in (List<SafeRoute.Models.IncidentReport>)ViewBag.RecentReports)
+                    {
+                        <tr>
+                            <td>@r.Id</td>
+                            <td><span class="badge bg-secondary">@r.Category?.Name</span></td>
+                            <td>@(r.LocationName ?? $"{r.Latitude:F4}, {r.Longitude:F4}")</td>
+                            <td>@r.ReportDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                @if (r.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                                else if (r.Status == "Verified")
+                                {
+                                    <span class="badge bg-success">Verified</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Rejected</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-action="UpdateReportStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <button name="status" value="Verified" class="btn btn-sm btn-success"><i class="fa-solid fa-check"></i></button>
+                                    <button name="status" value="Rejected" class="btn btn-sm btn-danger"><i class="fa-solid fa-xmark"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

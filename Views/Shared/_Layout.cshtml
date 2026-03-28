@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SafeRoute</title>
+    <meta name="description" content="SafeRoute — Navigate your city with confidence. Real-time safety map, incident reporting, and emergency services.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- SafeRoute Custom -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg sr-navbar fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                <span class="brand-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                SafeRoute
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <i class="fa-solid fa-bars text-white"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Map"><i class="fa-solid fa-radar me-1"></i> Safety Radar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Incidents"><i class="fa-solid fa-list me-1"></i> Incidents</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Analytics"><i class="fa-solid fa-chart-line me-1"></i> Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="SOSGuide"><i class="fa-solid fa-life-ring me-1"></i> SOS Guide</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <button class="btn btn-danger-glow" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Report
+                        </button>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <button class="btn btn-glass btn-sm px-3" id="themeToggle" title="Toggle Light/Dark Mode">
+                            <i class="fa-solid fa-sun" id="themeIcon"></i>
+                        </button>
+                    </li>
+                </ul>
+                <partial name="_LoginPartial" />
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div style="padding-top: 76px;">
+        <main>
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- SOS Floating Button -->
+    <button class="sos-fab" id="sosBtn" title="Emergency SOS" onclick="triggerSOS()">SOS</button>
+
+    <!-- SOS Modal -->
+    <div class="modal fade" id="sosModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:var(--bg-card);border:2px solid #ff6b6b;">
+                <div class="modal-body text-center p-5">
+                    <div id="sosCountdown" style="display:none">
+                        <div style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#ff6b6b,#ee5a24);display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem;animation:pulse 1s infinite;">
+                            <span id="sosTimer" style="font-size:3rem;font-weight:800;color:white">5</span>
+                        </div>
+                        <h3 class="fw-bold text-danger">🚨 SOS ACTIVATING</h3>
+                        <p class="text-muted">Cancel within <span id="sosTimerText">5</span> seconds...</p>
+                        <button class="btn btn-glass btn-lg mt-2" onclick="cancelSOS()"><i class="fa-solid fa-xmark me-1"></i> CANCEL</button>
+                    </div>
+                    <div id="sosActive" style="display:none">
+                        <i class="fa-solid fa-check-circle fa-4x text-success mb-3"></i>
+                        <h3 class="fw-bold">SOS Sent!</h3>
+                        <p class="text-muted" id="sosMessage">Opening SMS to your trusted contacts...</p>
+                        <div class="d-flex gap-2 justify-content-center mt-3">
+                            <a id="sosCallBtn" href="tel:999" class="btn btn-danger btn-lg"><i class="fa-solid fa-phone me-1"></i> Call 999</a>
+                            <button class="btn btn-success btn-lg" onclick="resolveSOS()"><i class="fa-solid fa-check me-1"></i> I'm Safe</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="sr-footer">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <span class="text-muted-custom fw-bold"><i class="fa-solid fa-shield-halved me-1 text-accent"></i> SafeRoute &copy; 2026</span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="me-3">Privacy</a>
+                    <a href="#" class="me-3">Terms</a>
+                    <a href="#">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/sos.js" asp-append-version="true"></script>
+    <script>
+        // Theme Toggle
+        (function() {
+            var saved = localStorage.getItem('sr-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            function updateIcon() {
+                var icon = document.getElementById('themeIcon');
+                if (icon) {
+                    var t = document.documentElement.getAttribute('data-theme');
+                    icon.className = t === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+                }
+            }
+            updateIcon();
+            document.addEventListener('DOMContentLoaded', function() {
+                updateIcon();
+                var btn = document.getElementById('themeToggle');
+                if (btn) {
+                    btn.addEventListener('click', function() {
+                        var current = document.documentElement.getAttribute('data-theme');
+                        var next = current === 'dark' ? 'light' : 'dark';
+                        document.documentElement.setAttribute('data-theme', next);
+                        localStorage.setItem('sr-theme', next);
+                        updateIcon();
+                    });
+                }
+            });
+        })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

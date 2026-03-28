@@ -1,0 +1,42 @@
+﻿@model List<SafeRoute.Models.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container py-5" style="max-width:800px">
+    <h2 class="fw-bold mb-4"><i class="fa-solid fa-bell me-2 text-accent"></i>Notifications</h2>
+
+    @if (Model.Any())
+    {
+        @foreach (var n in Model)
+        {
+            <div class="card glass-card p-3 mb-2 @(n.IsRead ? "" : "border-start border-4 border-primary")" style="@(!n.IsRead ? "border-left:3px solid var(--accent) !important;" : "")">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-semibold">
+                            @if (n.Type == "Alert") { <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> }
+                            else if (n.Type == "SOS") { <i class="fa-solid fa-circle-exclamation text-danger me-1"></i> }
+                            else if (n.Type == "ReportUpdate") { <i class="fa-solid fa-clipboard-check text-success me-1"></i> }
+                            else { <i class="fa-solid fa-info-circle text-accent me-1"></i> }
+                            @n.Title
+                        </div>
+                        <p class="text-muted small mb-0 mt-1">@n.Message</p>
+                    </div>
+                    <small class="text-muted text-nowrap ms-3">@n.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                </div>
+                @if (!string.IsNullOrEmpty(n.Link))
+                {
+                    <a href="@n.Link" class="btn btn-sm btn-glass mt-2" style="width:fit-content">View â†’</a>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="card glass-card p-5 text-center">
+            <i class="fa-solid fa-bell-slash fa-3x mb-3 text-muted"></i>
+            <p class="text-muted">No notifications yet.</p>
+        </div>
+    }
+</div>
+
